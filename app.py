@@ -1,9 +1,10 @@
 import streamlit as st
 from PIL import Image
-import pytesseract
+import easyocr
 import io
 import pandas as pd
 import snowflake.connector
+import numpy as np
 
 @st.cache_resource(show_spinner=False)
 def get_snowflake_connection():
@@ -18,9 +19,16 @@ def get_snowflake_connection():
     )
     return conn
 
-def extract_text_tesseract(image_bytes):
-    image = Image.open(io.BytesIO(image_bytes))
-    text = pytesseract.image_to_string(image)
+@st.cache_resource
+def get_ocr_reader():
+    return easyocr.Reader(['en'])
+
+def extract_text_easyocr(image_bytes):
+    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    np_image = np.array(image)
+    reader = get_ocr_reader()
+    results = reader.readtext(np_image, detail=0)
+    text = "\n".join(results)
     return text
 
 def parse_invoice_text(text):
@@ -66,8 +74,8 @@ if uploaded_file:
     image_bytes = uploaded_file.read()
     st.image(image_bytes, caption="Uploaded Invoice", use_column_width=True)
     
-    st.info("Running OCR with Tesseract...")
-    raw_text = extract_text_tesseract(image_bytes)
+    st.info("Running OCR with EasyOCR...")
+    raw_text = extract_text_easyocr(image_bytes)
     
     st.text_area("Raw OCR Text", raw_text, height=300)
     
