@@ -5,6 +5,8 @@ import io
 import pandas as pd
 import snowflake.connector
 import numpy as np
+import re
+from dateutil import parser
 
 @st.cache_resource(show_spinner=False)
 def get_snowflake_connection():
@@ -32,12 +34,65 @@ def extract_text_easyocr(image_bytes):
     return text
 
 def parse_invoice_text(text):
-    lines = text.split('\n')
     data = {}
-    for line in lines:
-        if ':' in line:
-            key, val = line.split(':', 1)
-            data[key.strip().lower()] = val.strip()
+
+    # Invoice number
+    invoice_number_match = re.search(r'Invoice\s*#?(\d+)', text, re.IGNORECASE)
+    if invoice_number_match:
+        data["invoice_number"] = invoice_number_match.group(1)
+
+    # Invoice date
+    invoice_date_match = re.search(r'Invoice Date:\s*(.+)', text, re.IGNORECASE)
+    if invoice_date_match:
+        try:
+            data["invoice_date"] = str(parser.parse(invoice_date_match.group(1), fuzzy=True).date())
+        except:
+            pass
+
+    # Due date
+    due_date_match = re.search(r'Due Date:\s*(.+)', text, re.IGNORECASE)
+    if due_date_match:
+        try:
+            data["due_date"] = str(parser.parse(due_date_match.group(1), fuzzy=True).date())
+        except:
+            pass
+
+    # VAT Number
+    vat_match = re.search(r'VAT Number:\s*(\d+)', text, re.IGNORECASE)
+    if vat_match:
+        data["vat_number"] = vat_match.group(1)
+
+    # Client name
+    client_match = re.search(r'Invoiced To\s*\n(.+)', text, re.IGNORECASE)
+    if client_match:
+        data["client_name"] = client_match.group(1).strip()
+
+    # Client address (naively get next 2 lines after client name)
+    address_lines = re.findall(r'Invoiced To\s*\n.*\n(.*)\n(.*)', text)
+    if address_lines:
+        data["client_address"] = ', '.join([line.strip() for line in address_lines[0]])
+
+    # Total
+    total_match = re.search(r'Total\s*\nR?([\d.,]+)', text)
+    if total_match:
+        data["total"] = total_match.group(1).replace(',', '')
+
+    # Sub Total
+    sub_match = re.search(r'Sub Total\s*\nR?([\d.,]+)', text)
+    if sub_match:
+        data["subtotal"] = sub_match.group(1).replace(',', '')
+
+    # Tax
+    tax_match = re.search(r'15\.00%\s*SA\s*\nR?([\d.,]+)', text)
+    if tax_match:
+        data["tax"] = tax_match.group(1).replace(',', '')
+
+    # Status
+    if "UNPAID" in text.upper():
+        data["status"] = "UNPAID"
+    elif "PAID" in text.upper():
+        data["status"] = "PAID"
+
     return data
 
 def insert_raw_invoice_data(conn, filename, raw_text):
