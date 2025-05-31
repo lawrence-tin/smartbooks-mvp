@@ -1,6 +1,29 @@
-streamlit
-easyocr
-pillow
-snowflake-connector-python
-pandas
-python-dotenv
+# Streamlit Cloud compatible versions
+streamlit==1.35.0
+
+# OCR with GPU-agnostic Torch (Cloud runs CPU only)
+easyocr==1.7.1
+torch==2.0.1
+torchvision==0.15.2
+
+# Image processing
+Pillow==10.2.0
+opencv-python-headless==4.8.1.78
+numpy==1.24.4
+
+# Text parsing and date handling
+python-dateutil==2.9.0.post0
+regex==2023.12.25
+
+# Snowflake connector and compatible pyarrow
+snowflake-connector-python==3.5.0
+pyarrow==18.0.0  # Needed for pandas + snowflake compatibility
+
+# Data handling
+pandas==1.5.3
+
+# Async-related fix (prevents loop errors in cloud)
+aiohttp==3.9.5
+
+# Protobuf (required by Streamlit Cloud)
+protobuf==4.25.3
