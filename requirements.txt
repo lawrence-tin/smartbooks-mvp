@@ -1,0 +1,6 @@
+streamlit
+pytesseract
+pillow
+snowflake-connector-python
+pandas
+python-dotenv
