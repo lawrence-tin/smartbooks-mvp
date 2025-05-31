@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg
+*.egg-info/
+*.pyo
+*.pyd
+*.pkl
+*.db
+.env
+*.env
+
+# Streamlit secrets
+.streamlit/secrets.toml
+
+# Jupyter
+.ipynb_checkpoints
+
+# Virtual Environments
+venv/
+.env/
+env/
+.venv/
+Pipfile.lock
+poetry.lock
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# macOS
+.DS_Store
+
+# PyCharm
+.idea/
+
+# Docker
+*.tar
+*.log
+docker-compose.override.yml
+
+# Git
+*.swp
+*.swo
+*.orig
+
+# Streamlit Deployment
+.streamlit/config.toml
+
+# Other possible local files
+*.sqlite
+*.bak
+*.tmp
